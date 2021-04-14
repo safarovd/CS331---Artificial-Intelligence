@@ -1,3 +1,10 @@
+##############################################
+# Collaborators: Daniel Safarov and Caden Burke
+# Date: 4/13/2021
+# Assignment 1
+# Algorithms: Breadth First Search, Deapth First Search
+################################################
+
 import argparse
 import re
 from collections import defaultdict
@@ -48,6 +55,7 @@ class SearchAlgorithm():
 
         def return_state_as_lists(self):
             return [[self.right_chickens,self.right_wolves,self.right_boat],[self.left_chickens,self.left_wolves,self.left_boat]]
+
     # defualt constructer for SearchAlgorithms class. Defines and initializes our start and goal states and determines the algorithm we want and output file
     def __init__(self):
         parser = argparse.ArgumentParser(description='Python search_algorithm.py < initial state file > < goal state file > < mode > < output file >')
@@ -61,6 +69,7 @@ class SearchAlgorithm():
         self.output = args.arguments[3]
 
         print("Your inputs are: ", args.arguments[0], args.arguments[1], self.algorithm, self.output)
+
     # read start and goal files
     def read_files(self, my_file):
         banks = []
@@ -71,6 +80,7 @@ class SearchAlgorithm():
         banks.append(left_bank)
         f.close()
         return banks
+
     # call correct algorithms
     def process_algorithms(self):
         if self.algorithm == "bfs":
@@ -85,6 +95,7 @@ class SearchAlgorithm():
             for state in solution:
                 f.write(str(state) + "\n")
             f.close()
+
     # perform actions for out generation of successors
     def move_animals(self, animal, amount, direction, parent):
         new_state = deepcopy(parent)
@@ -114,6 +125,7 @@ class SearchAlgorithm():
         
         new_state.move_boat()
         return new_state
+
     # generate all possible successors (specify every scenario)
     def generate_successors(self, parent):
         neighbors = []
@@ -149,6 +161,7 @@ class SearchAlgorithm():
             if parent.left_wolves > 1:
                 neighbors.append(self.move_animals("wolf", 2, "right", parent))
         return neighbors
+
     # validate every successor
     def validate(self, state):
         if state.left_chickens < 0 or state.left_wolves < 0 or state.right_chickens < 0 or state.right_wolves < 0:
@@ -170,6 +183,7 @@ class SearchAlgorithm():
         for s in path[::-1]:
             solution.append(list(reversed(s)))
         return solution
+
     # Breadth First Search Algorithm - taken from book and modified
     def bfs(self):
         state = self.State(self.start[1][0], self.start[1][1], self.start[1][2])
