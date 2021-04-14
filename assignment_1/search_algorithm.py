@@ -46,8 +46,6 @@ class SearchAlgorithm():
         def return_state_as_lists(self):
             return [[self.right_chickens,self.right_wolves,self.right_boat],[self.left_chickens,self.left_wolves,self.left_boat]]
 
-
-
     def __init__(self):
         parser = argparse.ArgumentParser(description='Python search_algorithm.py < initial state file > < goal state file > < mode > < output file >')
         parser.add_argument('arguments', metavar='S', type=str, nargs='+',
@@ -88,6 +86,7 @@ class SearchAlgorithm():
         new_state = deepcopy(parent)
         # save link to parent
         new_state.prev_state = parent
+        
         if animal == "chicken":
             if direction == "right":
                 new_state.move_chicken_right(amount)
@@ -105,48 +104,45 @@ class SearchAlgorithm():
             else:
                 new_state.move_wolf_left(amount)
                 new_state.move_chicken_left(amount)
+        
         new_state.move_boat()
         return new_state
 
 
     def generate_successors(self, parent):
         neighbors = []
-
-        if parent.left_boat:
-            # if there are chickens on left bank and # of chickens is greater than # of wolves move 1 chicken
-            if parent.left_chickens > 0 and parent.left_chickens - 1 >= parent.left_wolves:
-                neighbors.append(self.move_animals("chicken", 1, "right", parent))
-            # if there are chickens on left bank and # of chickens is greater than # of wolves move 2 chickens
-            if parent.left_chickens > 1 and parent.left_chickens - 2 >= parent.left_wolves:
-                neighbors.append(self.move_animals("chicken", 2, "right", parent))
-            # if there are wolves on left bank, move 1 wolf
-            if parent.left_wolves > 0:
-                neighbors.append(self.move_animals("wolf", 1, "right", parent))
-            # Put both animals in the boat
-            if (parent.left_chickens == parent.left_wolves) and parent.left_chickens and parent.left_wolves:
-                neighbors.append(self.move_animals("both", 1, "right", parent))
-            # if there are wolves on left bank, move 2 wolves
-            if parent.left_wolves > 1:
-                neighbors.append(self.move_animals("wolf", 2, "right", parent))
-
-
-
+        
         if parent.right_boat:
-            # if there are chickens on left bank and # of chickens is greater than # of wolves move 1 chicken
-            if parent.right_chickens > 0 and parent.right_chickens - 1 >= parent.right_wolves:
+            if parent.right_chickens > 0:
                 neighbors.append(self.move_animals("chicken", 1, "left", parent))
             # if there are chickens on right bank and # of chickens is greater than # of wolves move 2 chickens
-            if parent.right_chickens > 1 and parent.right_chickens - 2 >= parent.right_wolves:
+            if parent.right_chickens > 1:
                 neighbors.append(self.move_animals("chicken", 2, "left", parent))
             # if there are wolves on right bank, move 1 wolf
             if parent.right_wolves > 0:
                 neighbors.append(self.move_animals("wolf", 1, "left", parent))
             
-            if (parent.right_chickens == parent.right_wolves) and parent.right_chickens and parent.right_wolves:
+            if (parent.right_chickens == parent.right_wolves) and (parent.right_chickens and parent.right_wolves):
                 neighbors.append(self.move_animals("both", 1, "left", parent))
             # if there are wolves on right bank, move 2 wolves
             if parent.right_wolves > 1:
                 neighbors.append(self.move_animals("wolf", 2, "left", parent))
+
+        if parent.left_boat:
+            if parent.left_chickens > 0:
+                neighbors.append(self.move_animals("chicken", 1, "right", parent))
+            # if there are chickens on left bank and # of chickens is greater than # of wolves move 2 chickens
+            if parent.left_chickens > 1:
+                neighbors.append(self.move_animals("chicken", 2, "right", parent))
+            # if there are wolves on left bank, move 1 wolf
+            if parent.left_wolves > 0:
+                neighbors.append(self.move_animals("wolf", 1, "right", parent))
+            # Put both animals in the boat
+            if (parent.left_chickens == parent.left_wolves) and (parent.left_chickens and parent.left_wolves):
+                neighbors.append(self.move_animals("both", 1, "right", parent))
+            # if there are wolves on left bank, move 2 wolves
+            if parent.left_wolves > 1:
+                neighbors.append(self.move_animals("wolf", 2, "right", parent))
 
         return neighbors
 
@@ -155,41 +151,50 @@ class SearchAlgorithm():
         while state.prev_state:
             path.append(state.prev_state.return_state_as_lists())
             state = state.prev_state
+        print(len(path))
         return path[::-1]
     
     def bfs(self):
         state = self.State(self.start[1][0], self.start[1][1], self.start[1][2])
-        print(state.return_state_as_lists())
         path_cost = 0
         
         if state.return_state_as_lists() == self.goal:
             print("BFS: Solution Found!")
             return self.unwrap_path(state)
+
         frontier = []
         frontier.append(state)
         explored = set()
         
         while frontier:
+
             if not frontier:
                 print("BFS: Failed To Find Solution!")
                 return []
+
             curr = frontier.pop(0)
-            print(len(frontier))
-            # if (curr.left_chickens != 0) and curr.left_chickens < curr.left_wolves:
-            #     continue
-            # if (curr.right_chickens != 0) and curr.right_chickens < curr.right_wolves:
-            #     continue
+            if curr.return_state_as_lists() == self.goal:
+                print("BFS: Solution Found!")
+                return self.unwrap_path(curr)
+
+            if (curr.left_chickens != 0) and curr.left_chickens < curr.left_wolves:
+                print("Skip: ", curr.return_state_as_lists())
+                continue
+            if (curr.right_chickens != 0) and curr.right_chickens < curr.right_wolves:
+                print("Skip: ", curr.return_state_as_lists())
+                continue
+
             path_cost += 1
             explored.add(curr.return_state_as_tuple())
             successors = self.generate_successors(curr)
             for child in successors:
                 if child.return_state_as_tuple() not in explored:
-                    print(child.return_state_as_tuple())
-                    if child.return_state_as_lists() == self.goal:
-                        print("BFS: Solution Found!")
-                        return self.unwrap_path(child)
+                    print(child.return_state_as_lists())
+                    # if child.return_state_as_lists() == self.goal:
+                    #     print("BFS: Solution Found!")
+                    #     return self.unwrap_path(child)
                     frontier.append(child)
-        print("fall out of loop")
+        print("**EXIT BFS LOOP")
 
 
 if __name__ == "__main__":
