@@ -2,6 +2,9 @@ import argparse
 import re
 from collections import defaultdict
 from copy import deepcopy
+import sys
+
+sys.setrecursionlimit(100000)
 
 class SearchAlgorithm():
 
@@ -13,7 +16,7 @@ class SearchAlgorithm():
             self.right_chickens = 0
             self.right_wolves = 0
             self.left_boat = boat
-            self.right_boat = 1 if not boat else 0
+            self.right_boat = 0 if boat else 1
             self.prev_state = None
         
         def move_chicken_right(self, amount):
@@ -67,13 +70,14 @@ class SearchAlgorithm():
         banks.append(right_bank)
         banks.append(left_bank)
         f.close()
-        print(banks)
         return banks
 
     def process_algorithms(self):
         if self.algorithm == "bfs":
-            print("Executing Breadth-First Serach Algorithm...")
-            solution = self.bfs()
+            solution, path = self.bfs()
+            print("The number of expantions performed using BFS are: ", path)
+            print("The length of the path is: ", len(solution)-1)
+            print("The solution for BFS is: ", solution)
         else:
             print("Executing <TBD> Algorithm...")
         if solution:
@@ -84,10 +88,12 @@ class SearchAlgorithm():
 
     def move_animals(self, animal, amount, direction, parent):
         new_state = deepcopy(parent)
-        # save link to parent
+        # save link to parent so we can unwrap path
         new_state.prev_state = parent
         
+        # if we want to move chicken
         if animal == "chicken":
+            # move chicken to right bank
             if direction == "right":
                 new_state.move_chicken_right(amount)
             else:
@@ -97,6 +103,7 @@ class SearchAlgorithm():
                 new_state.move_wolf_right(amount)
             else:
                 new_state.move_wolf_left(amount)
+        # if we want to move both animals at once
         else:
             if direction == "right":
                 new_state.move_wolf_right(amount)
@@ -108,10 +115,8 @@ class SearchAlgorithm():
         new_state.move_boat()
         return new_state
 
-
     def generate_successors(self, parent):
         neighbors = []
-        
         if parent.right_boat:
             if parent.right_chickens > 0:
                 neighbors.append(self.move_animals("chicken", 1, "left", parent))
@@ -121,8 +126,8 @@ class SearchAlgorithm():
             # if there are wolves on right bank, move 1 wolf
             if parent.right_wolves > 0:
                 neighbors.append(self.move_animals("wolf", 1, "left", parent))
-            
-            if (parent.right_chickens == parent.right_wolves) and (parent.right_chickens and parent.right_wolves):
+            # send both animals on the boat
+            if (parent.right_chickens > 0 and parent.right_wolves > 0):
                 neighbors.append(self.move_animals("both", 1, "left", parent))
             # if there are wolves on right bank, move 2 wolves
             if parent.right_wolves > 1:
@@ -138,21 +143,33 @@ class SearchAlgorithm():
             if parent.left_wolves > 0:
                 neighbors.append(self.move_animals("wolf", 1, "right", parent))
             # Put both animals in the boat
-            if (parent.left_chickens == parent.left_wolves) and (parent.left_chickens and parent.left_wolves):
+            if (parent.left_chickens > 0 and parent.left_wolves > 0):
                 neighbors.append(self.move_animals("both", 1, "right", parent))
             # if there are wolves on left bank, move 2 wolves
             if parent.left_wolves > 1:
                 neighbors.append(self.move_animals("wolf", 2, "right", parent))
-
         return neighbors
+
+    def validate(self, state):
+        if state.left_chickens < 0 or state.left_wolves < 0 or state.right_chickens < 0 or state.right_wolves < 0:
+            return False
+        
+        if (state.left_chickens != 0) and state.left_chickens < state.left_wolves:
+            return False
+
+        if (state.right_chickens != 0) and state.right_chickens < state.right_wolves:
+            return False
+        return True
 
     def unwrap_path(self, state):
         path = [state.return_state_as_lists()]
+        solution = []
         while state.prev_state:
             path.append(state.prev_state.return_state_as_lists())
             state = state.prev_state
-        print(len(path))
-        return path[::-1]
+        for s in path[::-1]:
+            solution.append(list(reversed(s)))
+        return solution
     
     def bfs(self):
         state = self.State(self.start[1][0], self.start[1][1], self.start[1][2])
@@ -160,42 +177,38 @@ class SearchAlgorithm():
         
         if state.return_state_as_lists() == self.goal:
             print("BFS: Solution Found!")
-            return self.unwrap_path(state)
+            return self.unwrap_path(state), path_cost
 
+        queue = []
         frontier = []
-        frontier.append(state)
+
+        queue.append(state)
+        frontier.append(state.return_state_as_tuple())
         explored = set()
         
-        while frontier:
-
-            if not frontier:
+        while queue:
+            if not queue:
                 print("BFS: Failed To Find Solution!")
-                return []
+                return [], path
 
-            curr = frontier.pop(0)
-            if curr.return_state_as_lists() == self.goal:
-                print("BFS: Solution Found!")
-                return self.unwrap_path(curr)
+            curr = queue.pop(0)
+            frontier.pop(0)
+            explored.add(curr.return_state_as_tuple())
 
-            if (curr.left_chickens != 0) and curr.left_chickens < curr.left_wolves:
-                print("Skip: ", curr.return_state_as_lists())
-                continue
-            if (curr.right_chickens != 0) and curr.right_chickens < curr.right_wolves:
-                print("Skip: ", curr.return_state_as_lists())
+            if not self.validate(curr):
                 continue
 
             path_cost += 1
-            explored.add(curr.return_state_as_tuple())
             successors = self.generate_successors(curr)
             for child in successors:
-                if child.return_state_as_tuple() not in explored:
-                    print(child.return_state_as_lists())
-                    # if child.return_state_as_lists() == self.goal:
-                    #     print("BFS: Solution Found!")
-                    #     return self.unwrap_path(child)
-                    frontier.append(child)
-        print("**EXIT BFS LOOP")
-
+                if child.return_state_as_tuple() not in explored and child.return_state_as_tuple() not in frontier:
+                    if child.return_state_as_lists() == self.goal:
+                        print("BFS: Solution Found!")
+                        return self.unwrap_path(child), path_cost
+                    else:
+                        queue.append(child)
+                        frontier.append(child.return_state_as_tuple())
+        print("BFS: Exit loop")
 
 if __name__ == "__main__":
     SearchAlgorithm().process_algorithms()
