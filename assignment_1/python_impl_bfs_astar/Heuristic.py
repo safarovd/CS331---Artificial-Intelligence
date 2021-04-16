@@ -22,7 +22,7 @@ def heuristic_bfs(state):
         if not queue:
             print("H_BFS: Failed To Find Solution!")
             return []
-        # # chooses the lowest-cost node in frontier
+        # chooses the lowest-cost node in frontier
         curr = queue.pop(0)
         frontier.pop(0)
         explored.add(curr.return_state_as_tuple())
@@ -78,7 +78,7 @@ def heuristic_move_animals(animal, amount, direction, parent):
     new_state.move_boat()
     return new_state
 
-def heuristic_generate_successors( parent):
+def heuristic_generate_successors(parent):
     neighbors = []
     if parent.right_boat:
         neighbors.append(heuristic_move_animals("chicken", 1, "left", parent))
