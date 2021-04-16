@@ -2,7 +2,7 @@
 # Collaborators: Daniel Safarov and Caden Burke
 # Date: 4/13/2021
 # Assignment 1
-# Algorithms: Breadth First Search, Deapth First Search
+# Algorithms: Breadth First Search, A*
 ################################################
 
 import argparse
