@@ -9,7 +9,7 @@ import argparse
 from copy import deepcopy
 import sys
 from State import State
-from Utils import validate, unwrap_path, read_files, unwrap_path_costs, arg_parser
+from Utils import validate, unwrap_path, read_files, unwrap_path_costs, arg_parser, print_outputs
 from heapq import heapify, heapreplace, heappop, heappush
 import heapq
 from collections import defaultdict
@@ -18,9 +18,7 @@ import time
 
 sys.setrecursionlimit(100000)
 
-
 class SearchAlgorithm():
-
     # defualt constructer for SearchAlgorithms class. Defines and initializes our start and goal states and determines the algorithm we want and output file
     def __init__(self):
         args = arg_parser()
@@ -33,20 +31,26 @@ class SearchAlgorithm():
     # call correct algorithms
     def process_algorithms(self):
         solution = None
+        # run BFS algorithm
         if self.algorithm == "bfs":
             solution, path = self.bfs()
             print("The solution using BFS is: ")
-            [print(i) for i in solution]
+            print_outputs(solution)
             print("The number of expantions performed using BFS are: ", path)
             print("The path cost using BFS is: ", len(solution)-1)
-            
+        # run A* algorithm
         elif self.algorithm == "astar":
             solution, path = self.a_star()
             print("The solution using A* is: ")
-            [print(i) for i in solution]
+            print_outputs(solution)
             print("The number of expantions performed using A* are: ", path)
             print("The path cost using A* is: ", len(solution)-1)
-            
+        # run heuristic algorithm for fun
+        elif self.algorithm == "heuristic":
+            s = Heuristic.heuristic_bfs(State(self.start[1][0], self.start[1][1], self.start[1][2]))
+            print("The solution using the Heuristic BFS is: ")
+            print("The optimistic path cost by moving up to 3 animals at a time is: ", s.cost)
+        # write the solution to output.txt file
         if solution:
             f = open(self.output, "w")
             for state in solution:
@@ -55,19 +59,21 @@ class SearchAlgorithm():
 
     # perform actions for out generation of successors
     def move_animals(self, animal, amount, direction, parent):
+        # make sure to deep copy the parent so we don't overwrite the members within the parent and create a successor
         new_state = deepcopy(parent)
-        # save link to parent so we can unwrap path
+        # save link to parent so we can unwrap path at goal discovery
         new_state.prev_state = parent
         new_state.cost += 1
         
         # if we want to move chicken
         if animal == "chicken":
-            # move chicken to right bank
+            # move chicken to right bank or left
             if direction == "right":
                 new_state.move_chicken_right(amount)
             else:
                 new_state.move_chicken_left(amount)
         elif animal == "wolf":
+            # move wolf to right bank or left
             if direction == "right":
                 new_state.move_wolf_right(amount)
             else:
@@ -80,7 +86,7 @@ class SearchAlgorithm():
             else:
                 new_state.move_wolf_left(amount)
                 new_state.move_chicken_left(amount)
-        
+        # return successor
         new_state.move_boat()
         return new_state
 
@@ -113,23 +119,21 @@ class SearchAlgorithm():
     def bfs(self):
         state = State(self.start[1][0], self.start[1][1], self.start[1][2])
         path_cost = 0
-        
+        queue = []
+        frontier = []
+
         if state.return_state_as_lists() == self.goal:
             print("BFS: Solution Found!")
             return unwrap_path(state), path_cost
 
-        queue = []
-        frontier = []
-
         queue.append(state)
         frontier.append(state.return_state_as_tuple())
         explored = set()
-        
         while queue:
             if not queue:
                 print("BFS: Failed To Find Solution!")
                 return [[],[]], path_cost
-            # # chooses the lowest-cost node in frontier
+            # chooses the lowest-cost node in frontier
             curr = queue.pop(0)
             frontier.pop(0)
             explored.add(curr.return_state_as_tuple())
@@ -140,11 +144,9 @@ class SearchAlgorithm():
             path_cost += 1
             for child in self.generate_successors(curr):
                 if child.return_state_as_tuple() not in explored and child.return_state_as_tuple() not in frontier:
-                    
                     # if we find solution, unwrap path and return cost
                     if child.return_state_as_lists() == self.goal:
                         print("BFS: Solution Found!")
-                        
                         return unwrap_path(child), path_cost
                     else:
                         queue.append(child)
@@ -162,11 +164,12 @@ class SearchAlgorithm():
         # my heap for prioritizing states using priority cost
         heap = [(state.cost + state.heuristic(), state)]
         heapify(heap)
+        # create a frontier dictionary for keeping track of the states we have stored in heap. 
+        # We can track this by using the state tuples as a key for (used in later conditionals - line: 200) 
         frontier = {}
         frontier[state.return_state_as_tuple()] = (state.cost + state.heuristic_cost, state)
         # explored set so we don't revisit already explanded nodes
         explored = set()
-        
         while heap:
             if not heap:
                 print("A*: Failed To Find Solution!")
@@ -187,22 +190,21 @@ class SearchAlgorithm():
 
             path_cost += 1
             for child in self.generate_successors(curr[1]):
-                
                 if child.return_state_as_tuple() not in explored and child.return_state_as_tuple() not in frontier:
                     child.heuristic()          
                     heappush(heap, (child.cost + child.heuristic_cost, child))
                     frontier[child.return_state_as_tuple()] = (child.cost + child.heuristic_cost, child)
-
                 # remember we store the value for the frontier as a tuple as well {state_values: (0:path_cost, 1:state)}
                 elif child.return_state_as_tuple() in frontier and frontier[child.return_state_as_tuple()][0] > child.cost + child.heuristic_cost:
+                    # remove the old state from heap. This procedure turns heap back into standard list
                     heap.remove(frontier[child.return_state_as_tuple()])
+                    # remove the state from the frontier tracker too
                     frontier.pop(child.return_state_as_tuple(), None)
+                    # turn heap list back into a heap
                     heapify(heap)
                     heappush(heap, (child.cost + child.heuristic_cost, child))
         print("A*: Exit loop")
-        
         return
-
+# pretend this is int main()
 if __name__ == "__main__":
     SearchAlgorithm().process_algorithms()
-

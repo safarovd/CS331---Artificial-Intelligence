@@ -1,7 +1,6 @@
 from Heuristic import heuristic_bfs
 
 class State():
-
     prev_state = None
     cost = 0
     heuristic_cost = None
@@ -48,7 +47,6 @@ class State():
         if (self.heuristic_cost == None):
             self.heuristic_cost = heuristic_bfs(self).cost 
             return self.heuristic_cost
-
     # getter functions for getting states in tuples and 2d lists
     def return_state_as_tuple(self):
         return (self.right_chickens,self.right_wolves,self.right_boat,self.left_chickens,self.left_wolves,self.left_boat)

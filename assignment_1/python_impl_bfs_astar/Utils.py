@@ -22,16 +22,12 @@ def read_files(my_file):
 
 # validate every successor
 def validate(state):
-
     if state.left_chickens < 0 or state.left_wolves < 0 or state.right_chickens < 0 or state.right_wolves < 0:
         return False
-    
     if (state.left_chickens != 0) and state.left_chickens < state.left_wolves:
         return False
-
     if (state.right_chickens != 0) and state.right_chickens < state.right_wolves:
         return False
-
     return True
 
 # unwrap paths from goal state
@@ -51,5 +47,8 @@ def unwrap_path_costs(state):
         while state.prev_state != None:
             path.insert(0, state.cost)
             state = state.prev_state
-    
     return path[::-1]
+
+def print_outputs(solution):
+    for state in solution:
+        print(state)

@@ -90,7 +90,7 @@ def heuristic_generate_successors( parent):
         neighbors.append(heuristic_move_animals("both", 1, "left", parent))
         # if there are wolves on right bank, move 2 wolves
         neighbors.append(heuristic_move_animals("wolf", 2, "left", parent))
-
+        # move 3 chickens to the left bank
         neighbors.append(heuristic_move_animals("chicken", 3, "left", parent))
         # if there are wolves on right bank, move 1 wolf
         neighbors.append(heuristic_move_animals("wolf", 3, "left", parent))
@@ -110,7 +110,7 @@ def heuristic_generate_successors( parent):
         neighbors.append(heuristic_move_animals("both", 1, "right", parent))
         # if there are wolves on right bank, move 2 wolves
         neighbors.append(heuristic_move_animals("wolf", 2, "right", parent))
-
+        # move 3 chickens to the right bank
         neighbors.append(heuristic_move_animals("chicken", 3, "right", parent))
         # if there are wolves on right bank, move 1 wolf
         neighbors.append(heuristic_move_animals("wolf", 3, "right", parent))
@@ -118,7 +118,4 @@ def heuristic_generate_successors( parent):
         neighbors.append(heuristic_move_animals("2 chickens 1 wolf", 2, "right", parent))
         # if there are wolves on right bank, move 2 wolves
         neighbors.append(heuristic_move_animals("2 wolves 1 chicken", 2, "right", parent))
-    
     return neighbors
-
-
