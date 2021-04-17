@@ -4,13 +4,6 @@
 
 using namespace std;
 
-bool compare_states2(State* next, State* cur) {
-    if (next->lchickens == cur->lchickens && next->lwolves == cur->lwolves && next->lboat == cur->lboat) {
-        return true;
-    }
-    return false;
-}
-
 Stack::Stack() {
   numData = 0;
   maxData = 2;
@@ -51,7 +44,7 @@ void* Stack::get_top() {
 
 bool Stack::find(State* cur) {
   for (int i = 0; i < numData; i++) {
-    if (compare_states2(cur, (State*)(stack[i]))) { 
+    if (cur->compare_states((State*)(stack[i]))) { 
       return true;
     }
   }
@@ -60,7 +53,7 @@ bool Stack::find(State* cur) {
 
 bool Stack::find_iddfs(State* cur) {
   for (int i = 0; i < numData; i++) {
-    if (compare_states2(cur, (State*)(stack[i])) && cur->depth >= ((State*)(stack[i]))->depth) { 
+    if (cur->compare_states((State*)(stack[i])) && cur->depth >= ((State*)(stack[i]))->depth) { 
       return true;
     }
   }

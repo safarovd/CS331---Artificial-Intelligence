@@ -1,6 +1,7 @@
 #ifndef STATE_H
 #define STATE_H
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -30,14 +31,30 @@ public:
         depth = cur->depth;
     }
 
-    void print_state() {
-    cout << "------------" << endl;
-    cout << "C: " << lchickens << " || C: " << rchickens << endl;
-    cout << "W: " << lwolves << " || W: " << rwolves << endl;
-    cout << "B: " << lboat << " || B: " << rboat << endl;
-    cout << "------------" << endl;
+    bool compare_states(State* other) {
+        if (lchickens == other->lchickens && lwolves == other->lwolves && lboat == other->lboat) {
+            return true;
+        }
+        return false;
+    }
 
-}
+    void print_state() {
+        cout << "------------" << endl;
+        cout << "C: " << lchickens << " || C: " << rchickens << endl;
+        cout << "W: " << lwolves << " || W: " << rwolves << endl;
+        cout << "B: " << lboat << " || B: " << rboat << endl;
+        cout << "------------" << endl;
+
+    }
+
+    void print_state_file(ofstream &file) {
+        file << "------------" << endl;
+        file << "C: " << lchickens << " || C: " << rchickens << endl;
+        file << "W: " << lwolves << " || W: " << rwolves << endl;
+        file << "B: " << lboat << " || B: " << rboat << endl;
+        file << "------------" << endl;
+
+    }
 
 };
 

@@ -15,8 +15,6 @@ void expand(Stack*, Stack*, State*, int);
 bool game_over(State*);
 
 void print_answer(Stack*, char*);
-void print_state_file(State*, ofstream &);
-bool compare_states(State*, State*);
 bool already_have_node(Stack*, Stack*, State*, int);
 
 void delete_stack(Stack*);
@@ -358,7 +356,7 @@ bool already_have_node(Stack* frontier, Stack* explored, State* cur, int alg) {
 }
 
 bool is_goal(State* g, State* cur) {
-    if (compare_states(g, cur)) {
+    if (g->compare_states(cur)) {
         return true;
     }
     return false;
@@ -372,15 +370,6 @@ bool game_over(State* cur) {
         return true;
     }
     return false;
-}
-
-void print_state_file(State* cur, ofstream &file) {
-    file << "------------" << endl;
-    file << "C: " << cur->lchickens << " || C: " << cur->rchickens << endl;
-    file << "W: " << cur->lwolves << " || W: " << cur->rwolves << endl;
-    file << "B: " << cur->lboat << " || B: " << cur->rboat << endl;
-    file << "------------" << endl;
-
 }
 
 void print_answer(Stack* explored, char* file) {
@@ -399,7 +388,7 @@ void print_answer(Stack* explored, char* file) {
     ofstream in(file);
     for(int i = answer->get_numData(); i > 0 ; i--) {
         cur = (State*)(answer->pop());
-        print_state_file(cur, in);
+        cur->print_state_file(in);
 
     }
     in.close();
@@ -408,13 +397,6 @@ void print_answer(Stack* explored, char* file) {
     cout << "This is the initial state. Scrolling up progresses through the actions." << endl;
     cout << "EXPANDED NODES: " << totalExpanded << endl;
     cout << "PATH SIZE: " << ((State*)(explored->get_top()))->depth << endl;
-}
-
-bool compare_states(State* next, State* cur) {
-    if (next->lchickens == cur->lchickens && next->lwolves == cur->lwolves && next->lboat == cur->lboat) {
-        return true;
-    }
-    return false;
 }
 
 void delete_stack(Stack* stack) {
