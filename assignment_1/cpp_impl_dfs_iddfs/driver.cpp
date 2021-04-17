@@ -7,18 +7,20 @@
 
 using namespace std;
 
-Stack* dfs(State*, State*);
+void dfs(State*, State*, Stack*, Stack*);
+void iddfs(State*, State*, Stack*, Stack*);
+
 bool is_goal(State*, State*);
-void expand(Stack*, Stack*, State*);
+void expand(Stack*, Stack*, State*, int);
 bool game_over(State*);
 
-//void iddfs(State, State);
 
 void print_answer(Stack*, char*);
-void print_state(State*);
 void print_state_file(State*, ofstream &);
-void state_equals_state(State*, State*);
 bool compare_states(State*, State*);
+bool already_have_node(Stack*, Stack*, State*, int);
+
+void delete_stack(Stack*);
 
 int totalExpanded = 0;
 //Command line arguments: <initial State file> <goal State file> <mode> <output file>
@@ -59,18 +61,21 @@ int main(int argc, char** argv) {
     g->rboat = stoi(temp);
     input.close();
 
-    Stack* answer;
+    Stack* frontier = new Stack;
+    Stack* explored = new Stack;
     if (argv[3][0] == 'D' || argv[3][0] == 'd') {    //dfs
         cout << "------------DFS Traversal------------" << endl;
-        answer = dfs(s, g);
+        dfs(s, g, frontier, explored);
 
     }
     else {                      //iddfs
         cout << "------------IDDFS Traversal------------" << endl;
-        //Stack answer = iddfs(s, g);
+        iddfs(s, g, frontier, explored);
 
     }
-    print_answer(answer, argv[4]);
+    print_answer(explored, argv[4]);
+    delete_stack(explored);
+    delete_stack(frontier);
 
     delete s;
     delete g;
@@ -78,46 +83,87 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-Stack* dfs(State* cur, State* g) {
-    Stack* frontier = new Stack;
-    Stack* explored = new Stack;
+void dfs(State* s, State* g, Stack* frontier, Stack* explored) {
+    State* cur = new State;
+    cur->equals(s);
     frontier->push(cur);
     totalExpanded++;
-    expand(frontier, explored, cur);
+    expand(frontier, explored, cur, 1);
     
     while (true) {
         if (!(frontier->get_numData())) {
-            return frontier;
+            return;
         }
         cur = (State*)(frontier->pop());
         explored->push(cur);
 
         if (is_goal(g, cur)) {
-            return explored;
+            return;
         }
 
         if (!(game_over(cur))) {
             totalExpanded++;
-            expand(frontier, explored, cur);
+            expand(frontier, explored, cur, 1);
         }
 
     }
 }
 
-void expand(Stack* frontier, Stack* explored, State* cur) {
+void iddfs(State* s, State* g, Stack* frontier, Stack* explored) {
+    State* cur = new State;
+    cur->equals(s);
+    frontier->push(cur);
+    totalExpanded++;
+    expand(frontier, explored, cur, 2);
+    int l = 1;
+    
+    while (true) {
+        if (!(frontier->get_numData())) {
+            return;
+        }
+
+        cur = (State*)(frontier->pop());
+        explored->push(cur);
+
+        if (is_goal(g, cur)) {
+            return;
+        }
+
+        if (!(game_over(cur)) && cur->depth < l) {
+            totalExpanded++;
+            expand(frontier, explored, cur, 2);
+        }
+
+        if (!(frontier->get_numData())) {
+            l++;
+            for (int i = explored->get_numData(); i > 0; i--) {
+                delete (State*)(explored->pop());
+            }
+            cur = new State;
+            cur->equals(s);
+            frontier->push(cur);
+            totalExpanded++;
+            expand(frontier, explored, cur, 2);
+
+        }
+    }
+}
+
+void expand(Stack* frontier, Stack* explored, State* cur, int alg) {
     
     if (cur->lboat) {
         
         if (cur->lchickens > 0) {                    //put one chicken in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->lchickens -= 1;
             next->rchickens += 1;
             next->lboat = false;
             next->rboat = true;
             next->prev = cur;
             next->depth = cur->depth + 1;
-            if (!(frontier->find(next) || explored->find(next))) {
+
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -126,14 +172,15 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
         }
         if (cur->lchickens > 1) {                    //put 2 chickens in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->lchickens -= 2;
             next->rchickens += 2;
             next->lboat = false;
             next->rboat = true;
             next->prev = cur;
             next->depth = cur->depth + 1;
-            if (!(frontier->find(next) || explored->find(next))) {
+
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -143,14 +190,15 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
         }
         if (cur->lwolves > 0) {                      //put 1 wolf in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->lwolves -= 1;
             next->rwolves += 1;
             next->lboat = false;
             next->rboat = true;
             next->prev = cur;
             next->depth = cur->depth + 1;
-            if (!(frontier->find(next) || explored->find(next))) {
+
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -160,7 +208,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
         }
         if (cur->lwolves > 0 && cur->lchickens > 0) { //put 1 wolf and 1 chicken in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->lwolves -= 1;
             next->rwolves += 1;
             next->lchickens -= 1;
@@ -169,7 +217,8 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
             next->rboat = true;
             next->prev = cur;
             next->depth = cur->depth + 1;
-            if (!(frontier->find(next) || explored->find(next))) {
+
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -179,14 +228,15 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
         }
         if (cur->lwolves > 1) {                      //put 2 wolves in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->lwolves -= 2;
             next->rwolves += 2;
             next->lboat = false;
             next->rboat = true;
             next->prev = cur;
             next->depth = cur->depth + 1;
-            if (!(frontier->find(next) || explored->find(next))) {
+
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -198,14 +248,15 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
     else {
         if (cur->rchickens > 0) {                    //put one chicken in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->rchickens -= 1;
             next->lchickens += 1;
             next->lboat = true;
             next->rboat = false;
             next->prev = cur;
             next->depth = cur->depth + 1;
-            if (!(frontier->find(next) || explored->find(next))) {
+
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -215,7 +266,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
 
         if (cur->rchickens > 1) {                    //put 2 chickens in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->rchickens -= 2;
             next->lchickens += 2;
             next->lboat = true;
@@ -223,7 +274,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
             next->prev = cur;
             next->depth = cur->depth + 1;
 
-            if (!(frontier->find(next) || explored->find(next))) {
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -234,7 +285,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
 
         if (cur->rwolves > 0) {                      //put 1 wolf in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->rwolves -= 1;
             next->lwolves += 1;
             next->lboat = true;
@@ -242,7 +293,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
             next->prev = cur;
             next->depth = cur->depth + 1;
 
-            if (!(frontier->find(next) || explored->find(next))) {
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -253,7 +304,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
         
         if (cur->rwolves > 0 && cur->rchickens > 0) { //put 1 wolf and 1 chicken in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->rwolves -= 1;
             next->lwolves += 1;
             next->rchickens -= 1;
@@ -263,7 +314,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
             next->prev = cur;
             next->depth = cur->depth + 1;
 
-            if (!(frontier->find(next) || explored->find(next))) {
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -274,7 +325,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
 
         if (cur->rwolves > 1) {                      //put 2 wolves in the boat
             State* next = new State;
-            state_equals_state(next, cur);
+            next->equals(cur);
             next->rwolves -= 2;
             next->lwolves += 2;
             next->lboat = true;
@@ -282,7 +333,7 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
             next->prev = cur;
             next->depth = cur->depth + 1;
 
-            if (!(frontier->find(next) || explored->find(next))) {
+            if (!(already_have_node(frontier, explored, next, alg))) {
                 frontier->push(next);
             }
             else {
@@ -291,6 +342,20 @@ void expand(Stack* frontier, Stack* explored, State* cur) {
 
         }
     }
+}
+
+bool already_have_node(Stack* frontier, Stack* explored, State* cur, int alg) {
+    if (alg == 1) {
+        if (frontier->find(cur) || explored->find(cur)) {
+            return true;
+        }
+        return false;
+    }
+    if (frontier->find_iddfs(cur) || explored->find_iddfs(cur)) {
+        return true;
+    }
+    return false;
+
 }
 
 bool is_goal(State* g, State* cur) {
@@ -310,15 +375,6 @@ bool game_over(State* cur) {
     return false;
 }
 
-void print_state(State* cur) {
-    cout << "------------" << endl;
-    cout << "C: " << cur->lchickens << " || C: " << cur->rchickens << endl;
-    cout << "W: " << cur->lwolves << " || W: " << cur->rwolves << endl;
-    cout << "B: " << cur->lboat << " || B: " << cur->rboat << endl;
-    cout << "------------" << endl;
-
-}
-
 void print_state_file(State* cur, ofstream &file) {
     file << "------------" << endl;
     file << "C: " << cur->lchickens << " || C: " << cur->rchickens << endl;
@@ -335,7 +391,7 @@ void print_answer(Stack* answer, char* file) {
 
     for (int i = cur->depth; i >= 0; i--) {
         
-        print_state(cur);
+        cur->print_state();
         fout->push(cur);
         cur = cur->prev;
         
@@ -354,19 +410,21 @@ void print_answer(Stack* answer, char* file) {
     cout << "PATH SIZE: " << ((State*)(answer->get_top()))->depth << endl;
 }
 
-void state_equals_state(State* next, State* cur) {
-        next->lchickens = cur->lchickens;
-        next->lwolves = cur->lwolves;
-        next->lboat = cur->lboat;
-
-        next->rchickens = cur->rchickens;
-        next->rwolves = cur->rwolves;
-        next->rboat = cur->rboat;
-}
-
 bool compare_states(State* next, State* cur) {
     if (next->lchickens == cur->lchickens && next->lwolves == cur->lwolves && next->lboat == cur->lboat) {
         return true;
     }
     return false;
+}
+
+void delete_stack(Stack* stack) {
+    for (int i = stack->get_numData(); i > 0; i--) {
+        if ((State*)(stack->get_top()) == NULL) {
+            stack->fake_pop();
+        }
+        else {
+                delete (State*)(stack->pop());
+        }
+    }
+    delete stack;
 }

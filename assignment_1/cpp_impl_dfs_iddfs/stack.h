@@ -12,11 +12,12 @@ public:
 
     void push(void*);
     void* pop();
+    void fake_pop();
 
     void* get_top();
     bool find(State*);
 
-    ~Stack();
+    bool find_iddfs(State*);
 
     //~~~~~~~~~~~~~
 
