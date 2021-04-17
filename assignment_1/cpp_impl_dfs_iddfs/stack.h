@@ -20,6 +20,7 @@ public:
     bool find_iddfs(State*);
 
     //~~~~~~~~~~~~~
+    ~Stack();
 
     int get_numData() {return numData;}
 };

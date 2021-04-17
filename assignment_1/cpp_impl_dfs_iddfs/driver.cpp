@@ -14,7 +14,6 @@ bool is_goal(State*, State*);
 void expand(Stack*, Stack*, State*, int);
 bool game_over(State*);
 
-
 void print_answer(Stack*, char*);
 void print_state_file(State*, ofstream &);
 bool compare_states(State*, State*);
@@ -384,30 +383,31 @@ void print_state_file(State* cur, ofstream &file) {
 
 }
 
-void print_answer(Stack* answer, char* file) {
+void print_answer(Stack* explored, char* file) {
     
-    State* cur = (State*)(answer->get_top());
-    Stack* fout = new Stack;
+    State* cur = (State*)(explored->get_top());
+    Stack* answer = new Stack;
 
     for (int i = cur->depth; i >= 0; i--) {
         
         cur->print_state();
-        fout->push(cur);
+        answer->push(cur);
         cur = cur->prev;
         
     }
 
     ofstream in(file);
-    for(int i = fout->get_numData(); i > 0 ; i--) {
-
-        print_state_file((State*)(fout->pop()), in);
+    for(int i = answer->get_numData(); i > 0 ; i--) {
+        cur = (State*)(answer->pop());
+        print_state_file(cur, in);
 
     }
     in.close();
+    delete_stack(answer);
 
     cout << "This is the initial state. Scrolling up progresses through the actions." << endl;
     cout << "EXPANDED NODES: " << totalExpanded << endl;
-    cout << "PATH SIZE: " << ((State*)(answer->get_top()))->depth << endl;
+    cout << "PATH SIZE: " << ((State*)(explored->get_top()))->depth << endl;
 }
 
 bool compare_states(State* next, State* cur) {

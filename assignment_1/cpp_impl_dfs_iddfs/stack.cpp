@@ -67,3 +67,7 @@ bool Stack::find_iddfs(State* cur) {
   }
   return false;
 }
+
+Stack::~Stack() {
+  delete [] stack;
+}
