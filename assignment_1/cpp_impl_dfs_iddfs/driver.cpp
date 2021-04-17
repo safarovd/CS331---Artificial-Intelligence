@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <cassert>
 #include "stack.h"
 #include "state.h"
 
@@ -11,12 +10,11 @@ void dfs(State*, State*, Stack*, Stack*);
 void iddfs(State*, State*, Stack*, Stack*);
 
 bool is_goal(State*, State*);
-void expand(Stack*, Stack*, State*, int);
+bool already_have_node(Stack*, Stack*, State*, int);
 bool game_over(State*);
+void expand(Stack*, Stack*, State*, int);
 
 void print_answer(Stack*, char*);
-bool already_have_node(Stack*, Stack*, State*, int);
-
 void delete_stack(Stack*);
 
 int totalExpanded = 0;
@@ -90,7 +88,7 @@ int main(int argc, char** argv) {
 }
 
 /*************************************
- * Finds the a solution using dfs
+ * Finds a solution using dfs
  *************************************/
 void dfs(State* s, State* g, Stack* frontier, Stack* explored) {
     State* cur = new State;
@@ -120,7 +118,7 @@ void dfs(State* s, State* g, Stack* frontier, Stack* explored) {
 }
 
 /*************************************
- * Finds the a solution using iddfs
+ * Finds best solution using iddfs
  *************************************/
 void iddfs(State* s, State* g, Stack* frontier, Stack* explored) {
     State* cur = new State;
