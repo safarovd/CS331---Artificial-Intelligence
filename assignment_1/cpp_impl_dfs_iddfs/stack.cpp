@@ -34,7 +34,6 @@ void Stack::push(void* data) {
   }  
   stack[numData++] = data;
   
-
 }
 
 void* Stack::pop() {
