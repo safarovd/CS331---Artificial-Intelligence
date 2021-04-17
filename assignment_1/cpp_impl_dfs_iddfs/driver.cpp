@@ -25,8 +25,8 @@ int totalExpanded = 0;
 int main(int argc, char** argv) {
 
 /*************************************
- * data gathering
- * /
+ * data gathering start
+ */
     State* s = new State;
     ifstream input(argv[1]);
     string temp;
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     g->rboat = stoi(temp);
     input.close();
 /*
- * data gathering
+ * data gathering done
  *************************************/
 
     Stack* frontier = new Stack;
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 
 /*************************************
  * Finds the a solution using dfs
- * ***********************************/
+ *************************************/
 void dfs(State* s, State* g, Stack* frontier, Stack* explored) {
     State* cur = new State;
     cur->equals(s);
@@ -121,7 +121,7 @@ void dfs(State* s, State* g, Stack* frontier, Stack* explored) {
 
 /*************************************
  * Finds the a solution using iddfs
- * ***********************************/
+ *************************************/
 void iddfs(State* s, State* g, Stack* frontier, Stack* explored) {
     State* cur = new State;
     cur->equals(s);
@@ -164,7 +164,7 @@ void iddfs(State* s, State* g, Stack* frontier, Stack* explored) {
 
 /*************************************
  * Finds all possible states that are 1 action away from current state. Pushes them onto the frontier.
- * ***********************************/
+ *************************************/
 void expand(Stack* frontier, Stack* explored, State* cur, int alg) {
     
     if (cur->lboat) {                                //is the boat on the left?
@@ -363,7 +363,7 @@ void expand(Stack* frontier, Stack* explored, State* cur, int alg) {
 /*************************************
  * Returns true if the given node already exists in the explored or frontier.
  * IDDFS returns will return false if the already existing node is deeper than the given one.
- * ***********************************/
+ *************************************/
 bool already_have_node(Stack* frontier, Stack* explored, State* cur, int alg) {
     if (alg == 1) {
         if (frontier->find(cur) || explored->find(cur)) {
@@ -380,7 +380,7 @@ bool already_have_node(Stack* frontier, Stack* explored, State* cur, int alg) {
 
 /*************************************
  * Returns true if the given state is a goal state
- * ***********************************/
+ *************************************/
 bool is_goal(State* g, State* cur) {
     if (g->compare_states(cur)) {
         return true;
@@ -390,7 +390,7 @@ bool is_goal(State* g, State* cur) {
 
 /*************************************
  * Returns true if the given state is a terminal/game over state
- * ***********************************/
+ *************************************/
 bool game_over(State* cur) {
     if (cur->lwolves > cur->lchickens && cur->lchickens > 0) {
         return true;
@@ -403,7 +403,7 @@ bool game_over(State* cur) {
 
 /*************************************
  * Prints the path to the goal state both to the terminal and to the file specified by the user
- * ***********************************/
+ *************************************/
 void print_answer(Stack* explored, char* file) {
     
     State* cur = (State*)(explored->get_top());
@@ -433,7 +433,7 @@ void print_answer(Stack* explored, char* file) {
 
 /*************************************
  * Deletes a stack object
- * ***********************************/
+ *************************************/
 void delete_stack(Stack* stack) {
     for (int i = stack->get_numData(); i > 0; i--) {
         if ((State*)(stack->get_top()) == NULL) {
