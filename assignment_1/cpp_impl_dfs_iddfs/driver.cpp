@@ -6,8 +6,8 @@
 
 using namespace std;
 
-void dfs(State*, State*, Stack*, Stack*);
-void iddfs(State*, State*, Stack*, Stack*);
+bool dfs(State*, State*, Stack*, Stack*);
+bool iddfs(State*, State*, Stack*, Stack*);
 
 bool is_goal(State*, State*);
 bool already_have_node(Stack*, Stack*, State*, int);
@@ -68,16 +68,25 @@ int main(int argc, char** argv) {
 
     if (argv[3][0] == 'D' || argv[3][0] == 'd') {
         cout << "------------DFS Traversal------------" << endl;
-        dfs(s, g, frontier, explored);                                //DFS
+        if (!(dfs(s, g, frontier, explored))) {                                //DFS
+            cout << "No Solution Found" << endl;
+            return 0;
+
+        }
 
     }
     else {                      //iddfs
         cout << "------------IDDFS Traversal------------" << endl;
-        iddfs(s, g, frontier, explored);                               //IDDFS
+        if (!(iddfs(s, g, frontier, explored))) {                              //IDDFS
+            cout << "No Solution Found" << endl;
+            return 0;
+
+        }
 
     }
 
     print_answer(explored, argv[4]);
+
     delete_stack(explored);
     delete_stack(frontier);
 
@@ -90,7 +99,7 @@ int main(int argc, char** argv) {
 /*************************************
  * Finds a solution using dfs
  *************************************/
-void dfs(State* s, State* g, Stack* frontier, Stack* explored) {
+bool dfs(State* s, State* g, Stack* frontier, Stack* explored) {
     State* cur = new State;
     cur->equals(s);
     frontier->push(cur);
@@ -99,15 +108,15 @@ void dfs(State* s, State* g, Stack* frontier, Stack* explored) {
     
     while (true) {
 
-        if (!(frontier->get_numData())) {
-            return;
+        if (!(frontier->get_numData()) || cur->depth == 1000) {
+            return 0;
         }
 
         cur = (State*)(frontier->pop());                    //explore a node
         explored->push(cur);
 
         if (is_goal(g, cur)) {                              //is the current node a goal state?
-            return;
+            return 1;
         }
 
         if (!(game_over(cur))) {                            //if the current node is not a terminal state, expand it
@@ -120,7 +129,7 @@ void dfs(State* s, State* g, Stack* frontier, Stack* explored) {
 /*************************************
  * Finds best solution using iddfs
  *************************************/
-void iddfs(State* s, State* g, Stack* frontier, Stack* explored) {
+bool iddfs(State* s, State* g, Stack* frontier, Stack* explored) {
     State* cur = new State;
     cur->equals(s);
     frontier->push(cur);
@@ -129,15 +138,16 @@ void iddfs(State* s, State* g, Stack* frontier, Stack* explored) {
     int l = 1;                                              //initialize max depth to 1
     
     while (true) {
-        if (!(frontier->get_numData())) {
-            return;
+        if (!(frontier->get_numData()) || l == 1000) {       //return if l gets too big
+            return 0;
         }
 
         cur = (State*)(frontier->pop());                    //explore a node
         explored->push(cur);
 
         if (is_goal(g, cur)) {                              //is the current node a goal state?
-            return;
+            cout << l << endl;
+            return 1;
         }
 
         if (!(game_over(cur)) && cur->depth < l) {          //if the current node is not a terminal state, expand it
@@ -145,7 +155,7 @@ void iddfs(State* s, State* g, Stack* frontier, Stack* explored) {
             expand(frontier, explored, cur, 2);
         }
 
-        if (!(frontier->get_numData())) {
+        if (!(frontier->get_numData())) {                   //increase max depth
             l++;
             for (int i = explored->get_numData(); i > 0; i--) {
                 delete (State*)(explored->pop());
