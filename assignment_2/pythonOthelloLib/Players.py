@@ -42,8 +42,11 @@ class MinimaxPlayer(Player):
             self.oppSym = 'O'
         else:
             self.oppSym = 'X'
+    # calls decisions and passes into it potential moves
+    def get_move():
+        return
     
-
+    # which way we want to go
     def minimax_decision(self, board_state):
         return max()
 
@@ -91,7 +94,6 @@ class MinimaxPlayer(Player):
                     successor = copy.deepcopy(current_board_state)
                     successors.append(successor)
                     successors[-1].play_move(col, row, current_player)
-
         return successors
 
         
