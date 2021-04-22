@@ -6,6 +6,9 @@
 '''
 import math
 import copy
+import sys
+
+sys.setrecursionlimit(100000)
 
 class Player:
     def __init__(self, symbol):
@@ -42,58 +45,85 @@ class MinimaxPlayer(Player):
             self.oppSym = 'O'
         else:
             self.oppSym = 'X'
-    # calls decisions and passes into it potential moves
-    def get_move():
-        return
+    
+    # calls decisions and passes into it intial state
+    def get_move(self, board):
+        return self.minimax_decision(board)
     
     # which way we want to go
     def minimax_decision(self, board_state):
-        return max()
+        if self.symbol == board_state.p1_symbol:
+            value, action = self.minimax_max_value(board_state)
+        else:
+            value, action = self.minimax_min_value(board_state)
+        return action.move
 
-    def minimax_max_value(self, board_state, depth):
-        if (self.terminal_test(board_state, depth)):
-            utility(board_state)
-        value = -math.inf
-        # make max player one
-        player = board_state.p1_symbol
-        for action in generate_successors(state, player):
-            value = max(value, self.minimax_min_value(action, depth-1))
-        return value
+    def minimax_max_value(self, board_state):
+        if (self.terminal_test(board_state)):
+            return self.utility(board_state), board_state
+        value = 0
+        best_value = -999999
+        best_action = board_state
+        for successor in self.generate_successors(board_state):
+            value, action = self.minimax_min_value(successor)
+            if best_value <= value:
+                best_value = value
+                best_action = action
+        # if best_value == 999999:
+        #     best_value = board_state.val
+        return best_value, best_action 
 
-    def minimax_min_value(self, board_state, depth):
-        if (self.terminal_test(board_state, depth)):
-            utility(board_state)
-        value = math.inf
-        # make min player player two
-        player = board_state.p2_symbol
-        for action in generate_successors(state, player):
-            value = min(value, self.minimax_max_value(action, depth-1))
-        return value
+    def minimax_min_value(self, board_state):
+        if (self.terminal_test(board_state)):
+            return self.utility(board_state), board_state
+        value = 0
+        best_value = 999999
+        best_action = board_state
+        for successor in self.generate_successors(board_state):
+            value, action = self.minimax_max_value(successor)
+            if best_value >= value:
+                best_value = value
+                best_action = action
+        # if best_value == 999999:
+        #     best_value = board_state.val
+        return best_value, best_action
 
     # terminal state has been found when neither players can make any further moves
-    def terminal_test(self, board, depth):
-        if (!board.has_legal_moves_remaining(board.p1_symbol) and board.has_legal_moves_remaining(board.p2_symbol)) or (depth >= 5):
+    def terminal_test(self, board):
+        if (not board.has_legal_moves_remaining(board.p1_symbol)) and (not board.has_legal_moves_remaining(board.p2_symbol)):
             return True #leaf node
         else:
             return False #not a leaf node
 
     # return the weight of every move minimax can make
-    # positive weight: more player one pieces on the board 
-    # negative weight: more player two pieces on the board 
+    # positive weight: more player two pieces on the board 
+    # negative weight: more player onme pieces on the board 
     def utility(self, board):
-        int weight = board.count_score(board.p1_symbol) - board.count_score(board.p2_symbol)
+        # weights = [[100, -10, -10, 100],
+        #            [-10, -5, -5, -10],
+        #            [-10, -5, -5, -10],
+        #            [100, -10, -10, 100]]
+        # board.val = weights[board.move[1]][board.move[0]]
+        # weight = weights[board.move[1]][board.move[0]]
+        # print("weight: ", weight)
+        weight = board.count_score(board.p1_symbol) - board.count_score(board.p2_symbol)
+        board.val = weight
         return weight
 
-    def generate_successors(self, current_board_state, current_player):
+    def generate_successors(self, current_board_state):
         successors = []
-        row, col = 0, 0
-
-        for row in range(0, 4):
-            for col in range(0, 4):
-                if (current_board_state.is_legal_move(row, col, current_player)):
+        for col in range(0, 4):
+            for row in range(0, 4):
+                # print("set: ", current_board_state.invalid_moves)
+                if (current_board_state.is_legal_move(col, row, self.symbol) and (col, row) not in current_board_state.invalid_moves):
+                # if current_board_state.is_legal_move(col, row, self.symbol):
+                    # print(current_board_state.display())
+                    # print("current player: ", current_player)
+                    # print("1 move: ", (col, row))
                     successor = copy.deepcopy(current_board_state)
                     successors.append(successor)
-                    successors[-1].play_move(col, row, current_player)
+                    successors[-1].play_move(col, row, self.symbol)
+                    successors[-1].move = (col, row)
         return successors
 
         

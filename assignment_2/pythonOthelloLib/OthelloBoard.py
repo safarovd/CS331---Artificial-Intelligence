@@ -13,7 +13,14 @@ class OthelloBoard(Board):
         Board.__init__(self, rows, cols)
         self.p1_symbol = p1
         self.p2_symbol = p2
+        self.move = (None, None)
+        self.val = 0
+        self.invalid_moves = set()
 
+    def __lt__(self, other):
+        if self.val < other.val:
+            return True
+        return False
 
 #PYTHON: this function is substitute for clone. call as New = Old.cloneOBoard()
     def cloneOBoard(self):
@@ -83,7 +90,7 @@ class OthelloBoard(Board):
         
     def flip_pieces_helper(self, col, row, symbol, d):
         if(self.get_cell(col, row) == symbol):
-            return 0;
+            return 0
         else:
             self.set_cell(col,row, symbol)
             (next_col, next_row) = self.set_coords_in_direction(col, row, d)
@@ -93,7 +100,7 @@ class OthelloBoard(Board):
         pieces_flipped = 0
         if(not self.is_in_bounds(col, row)):
             print("Flip Pieces bad params.")
-            exit();
+            exit()
         for d in Direction:
             (next_col, next_row) = self.set_coords_in_direction(col,row,d)
             if(self.check_endpoint(next_col, next_row, symbol, d, False)):
@@ -106,7 +113,7 @@ class OthelloBoard(Board):
             for r in range (0, self.rows):
                 if self.is_cell_empty(c, r) and self.is_legal_move(c, r, symbol):
                     return True
-        return False;
+        return False
 
     def count_score(self, symbol):
         score = 0

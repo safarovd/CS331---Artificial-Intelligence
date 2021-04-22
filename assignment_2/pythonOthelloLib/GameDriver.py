@@ -42,18 +42,19 @@ class GameDriver:
         invalid_move = True
         while(invalid_move):
             (col, row) = curr_player.get_move(self.board)
-            if( not self.board.is_legal_move(col, row, curr_player.symbol)):
-                print("Invalid move")
+            if(not self.board.is_legal_move(col, row, curr_player.symbol)):
+                print("Invalid move: ", (col, row))
+                self.board.invalid_moves.add((col, row))
             else:
                 print("Move:", [col,row], "\n")
                 self.board.play_move(col,row,curr_player.symbol)
-                return;
-
+                self.board.invalid_moves = set()
+                return
 
     def run(self):
         current = self.p1
         opponent = self.p2
-        self.board.display();
+        self.board.display()
 
         cant_move_counter, toggle = 0, 0
 
