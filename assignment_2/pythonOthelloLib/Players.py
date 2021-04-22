@@ -52,45 +52,52 @@ class MinimaxPlayer(Player):
     
     # which way we want to go
     def minimax_decision(self, board_state):
-        if self.symbol == board_state.p1_symbol:
-            value, action = self.minimax_max_value(board_state)
+        if self.symbol == board_state.p2_symbol:
+            _, action = self.minimax_max_value(board_state)
         else:
-            value, action = self.minimax_min_value(board_state)
+            _, action = self.minimax_min_value(board_state)
         return action.move
 
     def minimax_max_value(self, board_state):
         if (self.terminal_test(board_state)):
+            print("terminal")
             return self.utility(board_state), board_state
-        value = 0
+        value = -999999
         best_value = -999999
         best_action = board_state
-        for successor in self.generate_successors(board_state):
+        successors = self.generate_successors(board_state)
+        for successor in successors:
             value, action = self.minimax_min_value(successor)
             if best_value <= value:
                 best_value = value
                 best_action = action
-        # if best_value == 999999:
-        #     best_value = board_state.val
+        # print("max best: ", best_action.move)
+        # print("max best value: ", best_value)
+        # print("max invalid: ", best_action.invalid_moves)
+        # self.p_successors(successors)
         return best_value, best_action 
 
     def minimax_min_value(self, board_state):
         if (self.terminal_test(board_state)):
+            print("terminal")
             return self.utility(board_state), board_state
-        value = 0
+        value = 999999
         best_value = 999999
         best_action = board_state
-        for successor in self.generate_successors(board_state):
+        successors = self.generate_successors(board_state)
+        for successor in successors:
             value, action = self.minimax_max_value(successor)
             if best_value >= value:
                 best_value = value
                 best_action = action
-        # if best_value == 999999:
-        #     best_value = board_state.val
+        # print("min best: ", best_action.move)
+        # print("min invalid: ", best_action.invalid_moves)
+        # self.p_successors(successors)
         return best_value, best_action
 
     # terminal state has been found when neither players can make any further moves
     def terminal_test(self, board):
-        if (not board.has_legal_moves_remaining(board.p1_symbol)) and (not board.has_legal_moves_remaining(board.p2_symbol)):
+        if (not board.has_legal_moves_remaining(self.symbol)) and (not board.has_legal_moves_remaining(self.oppSym)):
             return True #leaf node
         else:
             return False #not a leaf node
@@ -99,14 +106,14 @@ class MinimaxPlayer(Player):
     # positive weight: more player two pieces on the board 
     # negative weight: more player onme pieces on the board 
     def utility(self, board):
-        # weights = [[100, -10, -10, 100],
+        # weights = [[1000, -10, -10, 1000],
         #            [-10, -5, -5, -10],
         #            [-10, -5, -5, -10],
-        #            [100, -10, -10, 100]]
+        #            [1000, -10, -10, 1000]]
         # board.val = weights[board.move[1]][board.move[0]]
         # weight = weights[board.move[1]][board.move[0]]
         # print("weight: ", weight)
-        weight = board.count_score(board.p1_symbol) - board.count_score(board.p2_symbol)
+        weight = board.count_score(self.symbol) - board.count_score(self.oppSym)
         board.val = weight
         return weight
 
@@ -125,5 +132,9 @@ class MinimaxPlayer(Player):
                     successors[-1].play_move(col, row, self.symbol)
                     successors[-1].move = (col, row)
         return successors
+
+    def p_successors(self, s):
+        for a in s:
+            print(a.move)
 
         
