@@ -44,10 +44,12 @@ class GameDriver:
             (col, row) = curr_player.get_move(self.board)
             if(not self.board.is_legal_move(col, row, curr_player.symbol)):
                 print("Invalid move: ", (col, row))
+                # if move is invalid in the current state add it to invalid_moves set
                 self.board.invalid_moves.add((col, row))
             else:
                 print("Move:", [col,row], "\n")
                 self.board.play_move(col,row,curr_player.symbol)
+                #reset the invalid moves set if a valid move has been made (this is done because after each move a prev invalid move may be valid in the next state)
                 self.board.invalid_moves = set()
                 return
 

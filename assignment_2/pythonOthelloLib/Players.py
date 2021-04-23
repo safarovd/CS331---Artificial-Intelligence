@@ -91,9 +91,11 @@ class MinimaxPlayer(Player):
     # terminal state has been found when neither players can make any further moves
     def terminal_test(self, board):
         if (not board.has_legal_moves_remaining(self.symbol)) and (not board.has_legal_moves_remaining(self.oppSym)):
-            return True #leaf node
+            # terminating node
+            return True 
         else:
-            return False #not a leaf node
+            # not a terminating node
+            return False 
 
     def generate_successors(self, current_board_state):
         successors = []

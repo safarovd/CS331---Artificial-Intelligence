@@ -126,7 +126,7 @@ class OthelloBoard(Board):
     def play_move(self, col, row, symbol):
         self.set_cell(col, row, symbol)
         self.flip_pieces(col, row, symbol)
-
+    # utility function for returning the weight of the current board state
     def utility(self):
         weight = self.count_score(self.p1_symbol) - self.count_score(self.p2_symbol)
         self.val = weight
