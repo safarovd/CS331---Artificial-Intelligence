@@ -127,6 +127,9 @@ class OthelloBoard(Board):
         self.set_cell(col, row, symbol)
         self.flip_pieces(col, row, symbol)
 
-
+    def utility(self):
+        weight = self.count_score(self.p1_symbol) - self.count_score(self.p2_symbol)
+        self.val = weight
+        return weight
 
 
