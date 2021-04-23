@@ -54,7 +54,7 @@ class MinimaxPlayer(Player):
     
     # which way we want to go
     def minimax_decision(self, board_state):
-        if self.symbol == board_state.p2_symbol:
+        if self.symbol == board_state.p1_symbol:
             _, action = self.minimax_max_value(board_state)
         else:
             _, action = self.minimax_min_value(board_state)

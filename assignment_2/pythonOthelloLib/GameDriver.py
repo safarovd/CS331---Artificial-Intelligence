@@ -49,7 +49,8 @@ class GameDriver:
             else:
                 print("Move:", [col,row], "\n")
                 self.board.play_move(col,row,curr_player.symbol)
-                #reset the invalid moves set if a valid move has been made (this is done because after each move a prev invalid move may be valid in the next state)
+                # reset the invalid moves set if a valid move has been made 
+                # (this is done because after each move a prev invalid move may be valid in the next state)
                 self.board.invalid_moves = set()
                 return
 
