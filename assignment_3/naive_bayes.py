@@ -3,9 +3,9 @@ import string
 import csv
 
 
-def read_data():
+def read_data(filepath):
     #Create a file object
-    f = open("./data/trainingSet.txt", 'r')
+    f = open(filepath, 'r')
     #Read in all lines as an array
     lines = f.readlines()
     #Translate is the most efficent way to strip punctiatuon, also make it lowercase
@@ -44,18 +44,29 @@ def featurize(data, vocabulary):
     vector_set = []
     #Get just the text entries to vectorize them
     just_text = [point[0] for point in data]
-    for review in just_text:
+    for i, review in enumerate(just_text):
         #Initialize a vector of zeroes of the length of the vocabulary for each review
         review_vector = [0]*len(vocabulary)
         #Split each review into words
         for word in review.split(" "):
             #If the word is in the review then flip the number at the index of its occurence in the vocabulary
-            if word in review and word != '':
+            if word in review and word != '' and word in vocabulary:
                 #print(vocabulary.index(word))
                 review_vector[vocabulary.index(word)] = 1
+        #Add the class label as the last element of the review vector
+        review_vector[-1] = int(data[i][1])
         vector_set.append(review_vector)
 
     return vector_set
+
+
+def write_preprocessed_data(data, vocab, name):
+    with open(name, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+
+        csvwriter.writerow(vocab)
+        
+        csvwriter.writerows(data) 
 
 
 #Utility function for debugging, writes all vocab words with their index to a csv file
@@ -77,15 +88,22 @@ def write_vocab_as_csv(vocabulary):
 
 
 #Read in the data
-cleansed_data = read_data()
+cleansed_data = read_data("./data/trainingSet.txt")
+cleansed_test = read_data("./data/testSet.txt")
+
 #add labels to it
 data_with_labels = seperate_class_labels(cleansed_data)
+test_data_labels = seperate_class_labels(cleansed_test)
 #get unique words to form the vocabulary
 vocabulary = get_vocabulary(data_with_labels)
 #append a dummy class label here
 vocabulary.append("classlabel")
 #convert the data into feature vectors
 vectorized_data = featurize(data_with_labels, vocabulary)
+test_vectorized = featurize(test_data_labels, vocabulary)
 
-print(data_with_labels[0])
-print(vectorized_data[0])
+#Write preprocessed training data
+write_preprocessed_data(vectorized_data, vocabulary, "preprocessed_train.txt")
+
+#Write preprocessed testing data
+write_preprocessed_data(test_vectorized, vocabulary, "preprocessed_test.txt")
