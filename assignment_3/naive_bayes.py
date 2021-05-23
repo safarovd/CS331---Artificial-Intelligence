@@ -2,6 +2,7 @@
 import string
 import csv
 import time
+from math import log
 
 
 def read_data(filepath):
@@ -91,6 +92,9 @@ def write_vocab_as_csv(vocabulary):
 # Classification Step:
 ###############################################
 def get_naive_bayes_parameters(vocabulary, training_data):
+    '''
+    Calculate and return the parameters needed for Naive Bayes
+    '''
     num_features = len(vocabulary)
     # these two lists take on the same dimentions of vocabulary. 
     # If the current index within either of these has a value,
@@ -107,7 +111,6 @@ def get_naive_bayes_parameters(vocabulary, training_data):
     # Each slot in that feature vector will be represented by M which has the value of 0 or 1 at each index within it
     for sentence_idx, M in enumerate(training_data):
         # Count the number of positive sentences (or positive sentiment)
-        
         if M[-1] == 1:
             num_positive_sentences += 1
         # iterate through the sentence vector (M) to associate each word with positive and negative sentiments
@@ -115,7 +118,6 @@ def get_naive_bayes_parameters(vocabulary, training_data):
         for word_idx, word_present in enumerate(M):
             # If positive sentiment
             if M[-1] == 1:
-                # print(word_idx, M[-1])
                 word_occurances_positive[word_idx] += word_present
                 # NOTE: this is weird as we do not have the frequency of the positive word within the sentence...
                 # we just have if the word is contained within the sentence. We might be able to just pass
@@ -136,14 +138,46 @@ def get_naive_bayes_parameters(vocabulary, training_data):
         # P(word_idx = 1 | CD = 1) 
         # ((# of records with M = true AND CD = true) + 1) / (# of records with CD = true) + N
         # NOTE: Not sure if we divid by the total record of positive words or sentences
-        p_wi_positive = ((word_occurances_positive[wi]*prob_positive_sentence) + 1) / (total_words_in_positive + 2)
+        p_wi_positive = (word_occurances_positive[wi] + 1) / (total_words_in_positive + 2)
         prob_wi_given_positive.append(p_wi_positive)
         # P(word_idx = 0 | CD = 0)
-        # notice how I do 1 - prob_positive_sentence. I believe this should get us the prob of a neg sentence
-        p_wi_negative = ((word_occurances_negative[wi]*(1-prob_positive_sentence)) + 1) / (total_words_in_negative + 2)
+        p_wi_negative = (word_occurances_negative[wi] + 1) / (total_words_in_negative + 2)
         prob_wi_given_negative.append(p_wi_negative)
-
     return prob_positive_sentence, prob_wi_given_positive, prob_wi_given_negative
+
+def classify_data(sentence, prob_positive_sentence, prob_wi_given_positive, prob_wi_given_negative):
+    '''
+    Classify data using Naive Bayes parameters
+    '''
+    sum_feature_given_pos = 0
+    sum_feature_given_neg = 0
+    # sentence is M
+    for wi, feature in enumerate(sentence):
+        if feature:
+            # refrence slide 19 - apply technical point #1
+            # SUM_(j <= m) [log(P(Xj = uj | Y = v))]
+            sum_feature_given_pos += log(prob_wi_given_positive[wi], 10)
+            sum_feature_given_neg += log(prob_wi_given_negative[wi], 10)
+    
+    # log(P(Y = v)) + SUM_(j <= m) [log(P(Xj = uj | Y = v))]
+    prediction_positive = log(prob_positive_sentence, 10)  + sum_feature_given_pos
+    prediction_negative = log((1-prob_positive_sentence), 10)  + sum_feature_given_neg
+    # return 1 if our prediction for positive is larger than our prediction for a negative
+    return 1 if prediction_positive > prediction_negative else 0
+
+def get_accuracy(actual_classes, predicted_classes):
+    '''
+    Get accuracy of predicted labels
+    '''
+    if len(actual_classes) != len(predicted_classes):
+        raise Exception("get_accuracy: Actual class labels is not the same length as predicted class labels.")
+    
+    num_correct = 0
+    for i in range(len(actual_classes)):
+        if actual_classes[i] == predicted_classes[i]:
+            num_correct += 1
+    
+    return num_correct/len(actual_classes)
 
 if __name__ == "__main__": 
     #Read in the data
@@ -169,6 +203,36 @@ if __name__ == "__main__":
 
     #Obtain the Naive Bayes parameters: number of positive sentences, probability of a feature given CD is 1 and probability of a features give CD = 0
     prob_positive_sentence, prob_wi_given_positive, prob_wi_given_negative = get_naive_bayes_parameters(vocabulary, vectorized_data)
-    print("Probability of positive word: ", prob_positive_sentence)
-    print(prob_wi_given_negative)
     
+    ##########################################
+    # 1. Classify training data
+    ##########################################
+    print("==Predicting training data (sanity check)...")
+    training_data_predictions = []
+    actual_training_CD = []
+    for M in vectorized_data:
+        # get actual labels
+
+        actual_training_CD.append(M[-1])
+        # begin classification
+        predicted_class_for_M = classify_data(M, prob_positive_sentence, prob_wi_given_positive, prob_wi_given_negative)
+        training_data_predictions.append(predicted_class_for_M)
+    ##########################################
+    # 2. Classify testing data
+    ##########################################
+    print("==Predicting testing data...")
+    test_data_predictions = []
+    actual_testing_CD = []
+    for M in test_vectorized:
+        # get actual labels
+        actual_testing_CD.append(M[-1])
+        # begin classification
+        predicted_class_for_M = classify_data(M, prob_positive_sentence, prob_wi_given_positive, prob_wi_given_negative)
+        test_data_predictions.append(predicted_class_for_M)
+    
+    f = open("results.txt", "w")
+    f.write("Validation accuracy for trainingSet.txt: ")
+    f.write(str(get_accuracy(actual_training_CD, training_data_predictions)))
+    f.write("\nValidation accuracy for testSet.txt: ")
+    f.write(str(get_accuracy(actual_testing_CD, test_data_predictions)))
+    f.close()
