@@ -207,7 +207,7 @@ if __name__ == "__main__":
     ##########################################
     # 1. Classify training data
     ##########################################
-    print("==Predicting training data (sanity check)...")
+    print("==Predicting training data...")
     training_data_predictions = []
     actual_training_CD = []
     for M in vectorized_data:
@@ -217,6 +217,7 @@ if __name__ == "__main__":
         # begin classification
         predicted_class_for_M = classify_data(M, prob_positive_sentence, prob_wi_given_positive, prob_wi_given_negative)
         training_data_predictions.append(predicted_class_for_M)
+    
     ##########################################
     # 2. Classify testing data
     ##########################################
@@ -231,7 +232,10 @@ if __name__ == "__main__":
         test_data_predictions.append(predicted_class_for_M)
     
     f = open("results.txt", "w")
-    f.write("Validation accuracy for trainingSet.txt: ")
+    f.write("Kelton Orth \nDaniel Safarov \nMay, 23, 2021 \n\n")
+    f.write("NOTES: We used 'preprocessed_train.txt' for the training data and 'preprocess_test.txt' for the test data (testSet.txt).\n")
+    f.write("'vocab.csv' is a simple CSV file that contains the vocabulary list and each word's corresponding index as an ID. \n\n")
+    f.write("Naive Bayes Outputs: \nValidation accuracy for trainingSet.txt: ")
     f.write(str(get_accuracy(actual_training_CD, training_data_predictions)))
     f.write("\nValidation accuracy for testSet.txt: ")
     f.write(str(get_accuracy(actual_testing_CD, test_data_predictions)))
